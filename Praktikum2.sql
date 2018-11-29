@@ -10,15 +10,16 @@ DROP TABLE IF EXISTS `Mahlzeit-Zutaten`;
 DROP TABLE IF EXISTS `Zutaten`;
 DROP TABLE IF EXISTS `Mahlzeit-Bild`;
 DROP TABLE IF EXISTS `Kategorien-Bilder`;
-DROP TABLE IF EXISTS `Bilder`;
 DROP TABLE IF EXISTS `Mahlzeiten-Kategorie`;
 DROP TABLE IF EXISTS `Unterkategorien`;
-DROP TABLE IF EXISTS `Kategorien`;
 DROP TABLE IF EXISTS `Preise`;
 DROP TABLE IF EXISTS `Mahlzeit-Deklaration`;
 DROP TABLE IF EXISTS `Mahlzeiten-Kommentar`;
 DROP TABLE IF EXISTS `Bestellanzahl`;
 DROP TABLE IF EXISTS `Mahlzeiten`;
+DROP TABLE IF EXISTS `Kategorien`;
+DROP TABLE IF EXISTS `Bilder`;
+DROP TABLE IF EXISTS `Oberkategorien`;
 DROP TABLE IF EXISTS `tätigt`;
 DROP TABLE IF EXISTS `Bestellungen`;
 DROP TABLE IF EXISTS `Deklarationen`;
@@ -161,12 +162,37 @@ CREATE TABLE IF NOT EXISTS `Tätigt` (
 		FOREIGN KEY(`Benutzer-ID`) REFERENCES Benutzer(Nummer)
 );
 
+CREATE TABLE IF NOT EXISTS `Oberkategorien` (
+	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	`Bezeichnung` VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS `Bilder` (
+	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	`Alt-Text` VARCHAR(255) NOT NULL,
+	`Titel` VARCHAR(50),
+	`Binaerdaten` LONGBLOB NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS `Kategorien` (
+	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	`Bezeichnung` VARCHAR(255) NOT NULL,
+	`Oberkategorie` INT UNSIGNED,
+	`Bild` INT UNSIGNED,
+	
+	FOREIGN KEY (Bild) REFERENCES Bilder(ID) ON DELETE SET NULL,
+	FOREIGN KEY (Oberkategorie) REFERENCES Oberkategorien(ID) ON DELETE SET NULL
+);
+
 CREATE TABLE IF NOT EXISTS `Mahlzeiten` (
 	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	`Name` VARCHAR(40) NOT NULL,
 	`Beschreibung` TEXT NOT NULL,
 	`Vorrat` INT UNSIGNED NOT NULL DEFAULT 0,
-	`Verfuegbar` BOOL							-- Muss berechnet werden
+	`Verfuegbar` BOOL,							-- Muss berechnet werden
+	`Kategorie` INT UNSIGNED,
+	
+	FOREIGN KEY (Kategorie) REFERENCES Kategorien(ID)
 );
 
 -- N-zu-M
@@ -212,55 +238,6 @@ CREATE TABLE IF NOT EXISTS `Preise` (
 	CONSTRAINT `Studentenrabatt` 
 		CHECK(`Studentpreis` < `MA-Preis`),
 		FOREIGN KEY (`Mahlzeiten-ID`) REFERENCES Mahlzeiten(ID) ON DELETE CASCADE	
-);
-
-CREATE TABLE IF NOT EXISTS `Kategorien` (
-	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	`Bezeichnung` ENUM ('Klassiker', 'Vegetarisch', 'Tellergericht')
-);
-
--- 1-zu-N zu sich selber.
-CREATE TABLE IF NOT EXISTS `Unterkategorien` (
-	`Unterkategorie` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-	`Oberkategorie` INT UNSIGNED,
-	
-	CONSTRAINT `Unterkategorie` 
-		FOREIGN KEY(`Oberkategorie`) REFERENCES Kategorien(ID) ON DELETE SET NULL
-);
-/*
-Das hier war ein kleiner Test. Nicht weiter beachten.
-SELECT * FROM Unterkategorien;
-
-INSERT INTO Kategorien (Bezeichnung) VALUES ('Klassiker');
-INSERT INTO Unterkategorien (Unterkategorie, Oberkategorie) VALUES (1,1);
-DELETE FROM Kategorien WHERE ID = (1);
-*/
--- 1-zu-N
-CREATE TABLE IF NOT EXISTS `Mahlzeiten-Kategorie` (
-	`Mahlzeiten-ID` INT UNSIGNED PRIMARY KEY,
-	`Kategorien-ID` INT UNSIGNED,
-	
-	CONSTRAINT `Mahlzeit-Kategorie` 
-		FOREIGN KEY(`Mahlzeiten-ID`) REFERENCES Mahlzeiten(ID),
-		FOREIGN KEY(`Kategorien-ID`) REFERENCES Kategorien(ID)
-);
-
-CREATE TABLE IF NOT EXISTS `Bilder` (
-	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	`Alt-Text` VARCHAR(255) NOT NULL,
-	`Titel` VARCHAR(50),
-	`Binaerdaten` LONGBLOB NOT NULL
-);
-
--- 1-zu-N
-CREATE TABLE IF NOT EXISTS `Kategorien-Bilder` (
-	`Kategorien-ID` INT UNSIGNED PRIMARY KEY,
-	`Bilder-ID` INT UNSIGNED,
-
-
-	CONSTRAINT `Kategorie-Bilder` 
-		FOREIGN KEY(`Kategorien-ID`) REFERENCES Kategorien(ID),
-		FOREIGN KEY(`Bilder-ID`) REFERENCES Bilder(ID) ON DELETE SET NULL
 );
 
 -- N-zu-M
@@ -440,3 +417,4 @@ INSERT INTO Kategorien (Bezeichnung) VALUES
 	('Klassiker'),
 	('Vegetarisch'),
 	('Tellergericht');
+	
