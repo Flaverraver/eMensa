@@ -1,0 +1,100 @@
+﻿@{
+    Page.Title = "eMensa - Start";
+    Page.Description = "eMensa Startseite";
+    Layout = "~/_Layout.cshtml";
+}
+
+@section header{
+    <header>
+        <div class="row">
+            <div class="col-4">
+                <h1>e-Mensa</h1>
+            </div>
+            <nav class="col-6">
+                <ul class="nav">
+                    <li class="nav-item"><a class="nav-link disabled" href="~/Start.cshtml">Start</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="~/Produkte.cshtml">Mahlzeiten</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="~/Detail.cshtml">Bestellung</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://www.fh-aachen.de/" target="_blank">FH-Aachen</a></li>
+                </ul>
+            </nav>
+            <div class="col-2">
+                <form action="http://www.google.de/search" method="get" target="_blank">
+                    <nav class="navbar navbar-light">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="search">
+                                    <i class="fa fa-search"></i>
+                                </span>
+                                <input type="search" class="form-control suche" placeholder="Suche..." aria-label="Suche" name="q" />
+                                <input type="hidden" name="as_sitesearch" value="www.fh-aachen.de" />
+                            </div>
+
+                        </div>
+                    </nav>
+                </form>
+            </div>
+        </div>
+    </header>
+}
+
+@section footer{
+    <footer>
+        <div class="row">
+            <div class="col-4">
+                <p>
+                    (c) 2018 DBWT Team O
+                </p>
+            </div>
+            <nav class="col-6">
+                <ul class="nav">
+                    <li class="nav-item"><a class="nav-link" href="#">Login</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="#">Registrieren</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="~/Zutaten.cshtml">Zutatenliste</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Impressum.html">Impressum</a></li>
+                </ul>
+            </nav>
+            <div class="col-2 uhrzeit">
+                @DateTime.Now
+            </div>
+        </div>
+    </footer>
+}
+
+<div class="row">
+    <div class="col splash">
+        <img title="Photo by Pirata Studio Film on Unsplash" src="/img/food2.png" alt="Bild von leckerem Essen." />
+    </div>
+</div>
+<div class="row">
+    <div class="col-4">
+        <p>Der Dienst <b>e-Mensa</b> ist noch in der Beta. Sie können bereits <a href="Produkte.html">Mahlzeiten</a> durchstöbern, aber noch nicht bestellen.</p>
+    </div>
+    <div class="col-8">
+        <div class="row">
+            <div class="col-8"><h2>Leckere Gerichte vorbestellen</h2><p>... und gemeinsam mit Kommilitonen und Freunden essen.</p></div>
+            <div class="col-4" id="test2">
+                <div class="row register">
+                    <button type="button" class="btn btn-primary">
+                        <i class="fas fa-hand-point-right"></i>
+                        Anmelden
+                    </button>
+                </div>
+                <div class="row register">
+                    <button type="button" class="btn btn-primary">
+                        <i class="fas fa-arrow-right"></i>
+                        Bestellen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-4">
+        <p>Registrieren Sie sich <a href="#">hier</a>, um über die Veröffentlichung des Dienstes per Mail informiert zu werden.</p>
+    </div>
+    <div class="col splash">
+        <img title="Photo by Ian Valerio on Unsplash" src="/img/canteen.jpg" alt="Bild der Mensa." />
+    </div>
+</div>

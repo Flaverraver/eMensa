@@ -1,0 +1,124 @@
+﻿body {
+}
+
+a {
+    color: #00b5ad
+}
+
+nav a {
+    border-right: 1px solid black;
+}
+
+    nav a.last {
+        border-right: 0 solid black;
+    }
+
+nav li:last-child a {
+    border-right: 0 solid black;
+}
+
+.splash img {
+    width: 100%
+}
+
+.splash,
+button {
+    margin-bottom: 12px;
+}
+
+test2 {
+    text-align: right;
+    float: right;
+}
+
+header {
+    margin-top: 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid black;
+}
+
+footer {
+    border-top: 1px solid black;
+    margin-top: 12px;
+    padding-top: 12px;
+    margin-bottom: 12px;
+}
+
+.register {
+    padding-left: 90px;
+    text-align: right;
+}
+
+.btn-primary {
+    width: 150px;
+    background-color: #00b5ad;
+    border-color: #00b5ad;
+}
+
+    .btn-primary:hover {
+        background-color: #fff;
+        color: #00b5ad;
+    }
+
+.suche {
+    width: 100px;
+}
+
+.produkte img {
+    height: 150px;
+    width: 150px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.produkte p {
+    width: 180px;
+    text-align: center;
+}
+
+fieldset {
+    border: solid black;
+    padding: 20px;
+    margin-bottom: 12px;
+}
+
+#speiselisten {
+    padding-left: 50px;
+    padding-right: 50px;
+    padding-bottom: 50px;
+}
+
+
+#vergriffen {
+    opacity: 0.3;
+    filter: alpha(opacity=70);
+}
+
+.headline {
+    margin-bottom: 12px;
+}
+
+.preis {
+    padding-left: 20px;
+    text-align: right;
+    font-size: xx-large;
+}
+
+.order {
+    padding-left: 20px;
+}
+
+legend {
+    text-align: center;
+}
+
+.details p {
+text-align:center;}
+	
+th {
+	padding: 5px;
+    background-color: #00b5ad;
+    color: white;
+}
+.tc { text-align:center;}
+tr:nth-child(even) {background-color: #f2f2f2;}

@@ -1,0 +1,172 @@
+﻿@using System.Configuration
+@using MySql.Data.MySqlClient;
+
+@{
+    Page.Title = "eMensa - Mahlzeiten";
+    Page.Description = "eMensa Mahlzeiten";
+    Layout = "~/_Layout.cshtml";
+}
+
+
+@{
+    MySqlConnection con = new MySqlConnection("Server=localhost;Port=3306;Database=E-Mensa;Uid=root;Pwd=AbindenJungle123");
+
+    const int MaxMeals = 8;
+}
+
+@functions
+{
+    class GerichtModel
+    {
+        public int ID { get; set; }
+        public string Beschreibung { get; set; }
+        public bool Verfügbar { get; set; }
+        public byte[] BinData { get; set; }
+    }
+}
+
+@section header{
+    <header>
+        <div class="row">
+            <div class="col-4">
+                <h1>e-Mensa</h1>
+            </div>
+            <nav class="col-6">
+                <ul class="nav">
+                    <li class="nav-item"><a class="nav-link" href="~/Start.cshtml">Start</a> </li>
+                    <li class="nav-item"><a class="nav-link disabled" href="~/Produkte.cshtml">Mahlzeiten</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="~/Detail.cshtml">Bestellung</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://www.fh-aachen.de/" target="_blank">FH-Aachen</a></li>
+                </ul>
+            </nav>
+            <div class="col-2">
+                <form action="http://www.google.de/search" method="get" target="_blank">
+                    <nav class="navbar navbar-light">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="search">
+                                    <i class="fa fa-search"></i>
+                                </span>
+                                <input type="search" class="form-control suche" placeholder="Suche..." aria-label="Suche" name="q" />
+                                <input type="hidden" name="as_sitesearch" value="www.fh-aachen.de" />
+                            </div>
+                        </div>
+                    </nav>
+                </form>
+            </div>
+        </div>
+    </header>
+}
+
+@section footer{
+    <footer>
+        <div class="row">
+            <div class="col-4"><p>(c) 2018 DBWT Team O</p></div>
+            <nav class="col-6">
+                <ul class="nav">
+                    <li class="nav-item"><a class="nav-link" href="#">Login</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="#">Registrieren</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="~/Zutaten.cshtml">Zutatenliste</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Impressum.html">Impressum</a></li>
+                </ul>
+            </nav>
+            <div class="col-2 uhrzeit">
+                @DateTime.Now
+            </div>
+        </div>
+    </footer>
+}
+
+<div class="row">
+    <div class="col-4">
+    </div>
+    <div class="col-8 headline">
+        <h1>Verfügbare Speisen (Bestseller)</h1>
+    </div>
+</div>
+<div class="row">
+    <div class="col-4">
+        <form>
+            <fieldset id="speiselisten">
+                <legend id="speiseliste">Speisenliste filtern</legend>
+                <div class="dropdown show">
+                    <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Kategorien
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <a class="dropdown-item" href="#">Kategorie 1</a>
+                        <a class="dropdown-item" href="#">Kategorie 2</a>
+                        <a class="dropdown-item" href="#">Kategorie 3</a>
+                    </div>
+                </div><br />
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="customCheck1">
+                    <label class="custom-control-label" for="customCheck1">Nur Verfügbare</label><br />
+                </div>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="customCheck2" />
+                    <label class="custom-control-label" for="customCheck2">Nur Vegetarische</label><br />
+                </div>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="customCheck3" />
+                    <label class="custom-control-label" for="customCheck3">Nur Vegane</label>
+                </div><br />
+                <button type="button" class="btn btn-primary">Speisen filtern</button>
+            </fieldset>
+        </form>
+    </div>
+    <div class="col-8">
+        <div class="row">
+            @*Obere Reihe der Speisen*@
+            @{
+                try
+                {
+                    con.Open();
+                    MySqlCommand cmd;
+                    cmd = con.CreateCommand();
+                    cmd.CommandText = "SELECT Mahlzeiten.ID, Name, `Verfuegbar`, `Binaerdaten` FROM `mahlzeiten` LEFT JOIN `Bilder` ON Mahlzeiten.ID = Bilder.ID"; /*Limit 4;";*/
+                    MySqlDataReader r = cmd.ExecuteReader();
+
+                    int count = 0;
+                    while (r.Read() && count < MaxMeals)
+                    {
+                        var G = new GerichtModel
+                        {
+                            ID = Convert.ToInt32(r["ID"]),
+                            Beschreibung = r["Name"].ToString(),
+                            Verfügbar = Convert.ToBoolean(r["Verfuegbar"]),
+                            BinData = (byte[])r["Binaerdaten"]
+                        };
+
+                        <div class="col-3 produkte">
+                            @{
+                                        String Base64Prefix = "data:image/jpg;base64,";
+                                        String image = Base64Prefix + System.Convert.ToBase64String(G.BinData);
+                                        if (G.Verfügbar)
+                                        {
+                                    <img title="@G.Beschreibung" class="square" alt="Bild von @G.Beschreibung" src="@image" />
+                                    <p class="mb-0">@G.Beschreibung</p>
+                                    <p> <a href="Detail.cshtml?id=@G.ID" class="details">Details</a> </p>
+                                }
+                                else
+                                {
+                                    <img title="@G.Beschreibung" class="square unavailable" alt="Bild von @G.Beschreibung" src="@image" id="vergriffen" />
+                                    <p class="mb-0" style="color:grey">@G.Beschreibung</p>
+                                    <p>Vergriffen</p>
+                            }
+                            }
+                        </div>
+                        count++;
+                    }
+                    r.Close();
+                }
+                catch (Exception e)
+                {
+                    <div class="col-12">
+                        <p class="mb-0">@e.Message</p>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

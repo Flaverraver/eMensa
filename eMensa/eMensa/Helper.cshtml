@@ -1,0 +1,32 @@
+﻿@helper HelperName(string name)
+    {
+        // Die Hilfsmethode kann Code und/oder Markup enthalten, z. B.
+        // var msg = "Hallo " + name;
+        // <p>@msg</p>
+        // Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?LinkID=204658.
+}
+
+
+@helper Uhrzeit()
+    {
+        DateTime t = DateTime.Now;
+
+        <p> t.ToString(); </p>
+
+}
+
+@helper Base64Image(byte[] bindata, string alt)
+    {
+        if (bindata != null && bindata.Length > 0)
+        {
+            string Base64Prefix = "data:image/jpg;base64,";
+            string image = Base64Prefix + System.Convert.ToBase64String(bindata);
+
+            // Diese Base64-codierte Repräsentation der Bilddatei wird dem Browser direkt übergeben
+            <img src="@image" alt="@alt" />
+        }
+        else
+        {
+            <p class="error">Es kann kein Bild gezeigt werden </p>
+        }
+}

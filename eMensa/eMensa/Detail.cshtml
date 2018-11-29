@@ -1,0 +1,204 @@
+﻿@using System.Configuration
+@using MySql.Data.MySqlClient;
+@{
+    Page.Title = "eMensa - Details";
+    Page.Description = "eMensa Details";
+    Layout = "~/_Layout.cshtml";
+}
+
+@section header{
+    <header>
+        <div class="row">
+            <div class="col-4">
+                <h1>e-Mensa</h1>
+            </div>
+            <nav class="col-6">
+                <ul class="nav">
+                    <li class="nav-item"><a class="nav-link" href="~/Start.cshtml">Start</a> </li>
+                    <li class="nav-item"><a class="nav-link disabled" href="~/Produkte.cshtml">Mahlzeiten</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="~/Detail.cshtml">Bestellung</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://www.fh-aachen.de/" target="_blank">FH-Aachen</a></li>
+                </ul>
+            </nav>
+            <div class="col-2">
+                <form action="http://www.google.de/search" method="get" target="_blank">
+                    <nav class="navbar navbar-light">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="search">
+                                    <i class="fa fa-search"></i>
+                                </span>
+                                <input type="search" class="form-control suche" placeholder="Suche..." aria-label="Suche" name="q" />
+                                <input type="hidden" name="as_sitesearch" value="www.fh-aachen.de" />
+                            </div>
+                        </div>
+                    </nav>
+                </form>
+            </div>
+        </div>
+    </header>
+}
+
+@section footer{
+    <footer>
+        <div class="row">
+            <div class="col-4"><p>(c) 2018 DBWT Team O</p></div>
+            <nav class="col-6">
+                <ul class="nav">
+                    <li class="nav-item"><a class="nav-link" href="#">Login</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="#">Registrieren</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="~/Zutaten.cshtml">Zutatenliste</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Impressum.html">Impressum</a></li>
+                </ul>
+            </nav>
+            <div class="col-2 uhrzeit">
+                @DateTime.Now
+            </div>
+        </div>
+    </footer>
+}
+
+@{
+    MySqlConnection con = new MySqlConnection("Server=localhost;Port=3306;Database=E-Mensa;Uid=root;Pwd=AbindenJungle123");
+}
+
+@functions
+{
+    class GerichtModel
+    {
+        public int ID { get; set; }
+        public string Name { get; set; }
+        public string Beschreibung { get; set; }
+        public string Gastpreis { get; set; }
+    }
+}
+
+@{
+    string qstring = Request.QueryString["id"];
+    var G = new GerichtModel { };
+
+    Boolean GotException = false;
+    try
+    {
+        con.Open();
+        MySqlCommand cmd;
+        cmd = con.CreateCommand();
+        cmd.CommandText = "SELECT `ID`, Name, `Beschreibung`, `Gastpreis`, `Binaerdaten` FROM `Mahlzeiten` LEFT JOIN `Preise` LEFT JOIN `Bilder` ON Mahlzeiten.ID = Preise.`Mahlzeiten-ID` WHERE Mahlzeiten.ID='" + qstring + "'";
+
+
+        MySqlDataReader reader = cmd.ExecuteReader();
+
+
+        while (reader.Read())
+        {
+            G.ID = Convert.ToInt32(reader["ID"]);
+            G.Name = reader["Name"].ToString();
+            G.Beschreibung = reader["Beschreibung"].ToString();
+            G.Gastpreis = reader["Gastpreis"].ToString();
+
+        }
+        reader.Close();
+        con.Close();
+    }
+    catch (Exception e)
+    {
+        <p>@e.Message</p>
+        GotException = true;
+        // head
+    }
+}
+
+@if (G.ID == 0 || qstring == null || GotException)
+{
+    @*Hier kommt noch eine Fehlermeldung hin*@
+    <p>Etwas ist schief gelaufen. Sie werden in Kürze zurück zur Startseite geleitet.</p>
+    <meta http-equiv="refresh" content="3; url=Start.cshtml">
+}
+else
+{
+    <div class="row">
+        <div class="col-4"></div>
+        <div class="col-8 headline"><h2>Details für @G.Name</h2></div>
+    </div>
+    <div class="row">
+        <div class="col-4">
+
+            <fieldset>
+                <legend>Login</legend>
+                <form>
+                    <div class="form-group">
+                        <label class="sr-only" for="exampleInputEmail1">E-Mail</label>
+                        <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Benutzer">
+                    </div>
+                    <div class="form-group">
+                        <label class="sr-only" for="exampleInputPassword1">Password</label>
+                        <input type="password" class="form-control" id="exampleInputPassword1" placeholder="********">
+                    </div>
+                    <a href="#" id="login">Anmelden</a>
+                </form>
+            </fieldset>
+        </div>
+        <div class="col-6">
+            <img title="Photo by Brooke Lark on Unsplash"
+                 src="img/spiegelei2.png"
+                 width="500"
+                 height="200"
+                 class="splash"
+                 alt="Bild von leckerem Spiegelei" /><br />
+        </div>
+        <div class="col-2">
+            <div class="row preis">
+                <p class="text-right text-xl-right"><b>Gast-</b>Preis<br />@G.Gastpreis€</p>
+            </div>
+            <div class="row order">
+                <button type="button" class="btn btn-primary" id="order-button">
+                    <i class="fas fa-utensils"></i>
+                    Vorbestellen
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-4">
+            <p>
+                Melden Sie sich jetzt an, um die wirklich viel günstigeren Preise für Mitarbeiter oder Studenten
+                zu sehen.
+            </p>
+        </div>
+        <div class="col-6">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#description" role="tab" aria-selected="true">Beschreibung</a></li>
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#ingredients" role="tab" aria-selected="false">Zutaten</a></li>
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#review" role="tab" aria-selected="false">Bewertung</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active show" id="description" role="tabpanel">
+                    <p>@G.Beschreibung</p>
+                </div>
+                <div class="tab-pane" id="ingredients" role="tabpanel">
+                    <p>Ein Ei.</p>
+                </div>
+                <div class="tab-pane" id="review" role="tabpanel">
+                    <form method="post" action="http://bc5.m2c-lab.fh-aachen.de/form.php">
+
+                        <div class="form-group">
+                            <label for="comment">Kommentar</label>
+                            <textarea class="form-control" name="comment" id="comment"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="benutzer">Benutzer</label>
+                            <textarea class="form-control" name="benutzer" id="benutzer"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="bewertung">Bewertung</label>
+                            <input type="range" name="bewertung" min="0" max="5" id="bewertung" class="form-control" />
+                        </div>
+                        <input type="hidden" name="matrikel" value="3123764" />
+                        <input type="hidden" name="kontrolle" value="mac" />
+                        <button type="submit" class="btn btn-primary">Absenden</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,145 @@
+﻿@{
+    Page.Title = "eMensa - Zutaten";
+    Page.Description = "eMensa Zutaten";
+    Layout = "~/_Layout.cshtml";
+}
+
+@section header{
+    <header>
+        <div class="row">
+            <div class="col-4">
+                <h1>e-Mensa</h1>
+            </div>
+            <nav class="col-6">
+                <ul class="nav">
+                    <li class="nav-item"><a class="nav-link" href="~/Start.cshtml">Start</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="~/Produkte.cshtml">Mahlzeiten</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="~/Detail.cshtml">Bestellung</a></li>
+                    <li class="nav-item"><a class="nav-link" href="https://www.fh-aachen.de/" target="_blank">FH-Aachen</a></li>
+                </ul>
+            </nav>
+            <div class="col-2">
+                <form action="http://www.google.de/search" method="get" target="_blank">
+                    <nav class="navbar navbar-light">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="search">
+                                    <i class="fa fa-search"></i>
+                                </span>
+                                <input type="search" class="form-control suche" placeholder="Suche..." aria-label="Suche" name="q" />
+                                <input type="hidden" name="as_sitesearch" value="www.fh-aachen.de" />
+                            </div>
+                        </div>
+                    </nav>
+                </form>
+            </div>
+        </div>
+    </header>
+}
+
+@section footer{
+    <footer>
+        <div class="row">
+            <div class="col-4">
+                <p>
+                    (c) 2018 DBWT Team O
+                </p>
+            </div>
+            <nav class="col-6">
+                <ul class="nav">
+                    <li class="nav-item"><a class="nav-link" href="#">Login</a> </li>
+                    <li class="nav-item"><a class="nav-link" href="#">Registrieren</a> </li>
+                    <li class="nav-item"><a class="nav-link disabled" href="~/Zutaten.cshtml">Zutatenliste</a></li>
+                    <li class="nav-item"><a class="nav-link" href="Impressum.html">Impressum</a></li>
+                </ul>
+            </nav>
+            <div class="col-2 uhrzeit">
+                @DateTime.Now
+            </div>
+        </div>
+    </footer>
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            @using MySql.Data.MySqlClient
+            @try
+            {
+                MySqlConnection con = new MySqlConnection("Server=localhost;Port=3306;Database=E-Mensa;Uid=root;Pwd=AbindenJungle123");
+                con.Open();
+
+                string query = "SELECT Name, Bio, Vegan, Vegetarisch, Glutenfrei FROM Zutaten ORDER BY Bio DESC, Name ASC";
+                MySqlCommand command = new MySqlCommand(query, con);
+
+                MySqlDataReader reader = command.ExecuteReader();
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Zutat</th>
+                            <th>Vegan?</th>
+                            <th>Vegetarisch?</th>
+                            <th>Glutenfrei?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @while (reader.Read())
+                        {
+                            <tr>
+                                <td>
+                                    <a id="zutat" title="Suchen Sie nach @reader["Name"].ToString() im Web" target="_blank" href="http://www.google.de/search?q=@reader["Name"].ToString()">@reader["Name"].ToString()</a>
+                                    @if (reader["Bio"].Equals(true))
+                                    {
+                                        <i class="fa fa-leaf"></i>
+                                    }
+                                </td>
+                                <td class="tc">
+                                    @if (reader["Vegan"].Equals(true))
+                                    {
+                                        <i class="fa fa-check"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa fa-times"></i>
+                                    }
+                                </td>
+                                <td class="tc">
+                                    @if (reader["Vegetarisch"].Equals(true))
+                                    {
+                                        <i class="fa fa-check"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa fa-times"></i>
+                                    }
+                                </td>
+                                <td class="tc">
+                                    @if (reader["Glutenfrei"].Equals(true))
+                                    {
+                                        <i class="fa fa-check"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa fa-times"></i>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                con.Close();
+            }
+            catch (Exception ex)
+            {
+                <p class="danger">
+                    Fehler :o
+                    <br />@ex.Message
+                </p>
+            }
+        </div>
+    </div>
+    <i class="fa fa-leaf"></i> = Bio
+</div>
+
