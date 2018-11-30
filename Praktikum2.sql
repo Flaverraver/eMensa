@@ -191,8 +191,10 @@ CREATE TABLE IF NOT EXISTS `Mahlzeiten` (
 	`Vorrat` INT UNSIGNED NOT NULL DEFAULT 0,
 	`Verfuegbar` BOOL,							-- Muss berechnet werden
 	`Kategorie` INT UNSIGNED,
+	`Bild` INT UNSIGNED,
 	
-	FOREIGN KEY (Kategorie) REFERENCES Kategorien(ID)
+	FOREIGN KEY (Kategorie) REFERENCES Kategorien(ID),
+	FOREIGN KEY (Bild) REFERENCES Bilder(ID)
 );
 
 -- N-zu-M
@@ -417,4 +419,9 @@ INSERT INTO Kategorien (Bezeichnung) VALUES
 	('Klassiker'),
 	('Vegetarisch'),
 	('Tellergericht');
-	
+
+CREATE USER IF NOT EXISTS 'webapp'@'localhost' IDENTIFIED BY 'heinz';
+GRANT SELECT, PROCESS, EXECUTE, SHOW DATABASES, SHOW VIEW, UPDATE, TRIGGER, REFERENCES, INSERT, INDEX, EVENT, DROP, DELETE, CREATE VIEW, CREATE TEMPORARY TABLES, CREATE TABLESPACE, CREATE ROUTINE, CREATE, ALTER ROUTINE, ALTER  ON *.* TO 'webapp'@'localhost';
+FLUSH PRIVILEGES;
+
+SELECT `ID`, Name, `Beschreibung`, `Gastpreis`, `Binaerdaten` FROM `Mahlzeiten` LEFT JOIN (`Preise`,`Bilder`) ON Mahlzeiten.ID = Preise.`Mahlzeiten-ID` WHERE Mahlzeiten.ID=1;
