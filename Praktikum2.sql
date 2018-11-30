@@ -1,9 +1,4 @@
-/* Annahmen, die ich allgemein treffe schreibe ich hier hin. Spezifische
-// Annahmen werden vor der jeweiligen Tabelle beschrieben.
-// - 
-*/
--- DROP DATABASE `E-Mensa`;
--- CREATE DATABASE IF NOT EXISTS `E-Mensa`;				
+CREATE DATABASE IF NOT EXISTS `E-Mensa`;				
 USE `E-Mensa`;
 
 DROP USER IF EXISTS 'webapp'@'localhost';
@@ -11,8 +6,6 @@ CREATE USER 'webapp'@'localhost' IDENTIFIED BY 'heinz';
 GRANT USAGE ON *.* To 'webapp'@'localhost';
 GRANT SELECT, DELETE, INSERT, UPDATE ON *.* TO 'webapp'@'localhost';
 FLUSH PRIVILEGES;
-
-
 
 DROP TABLE IF EXISTS `Mahlzeit-Zutaten`;
 DROP TABLE IF EXISTS `Zutaten`;
@@ -291,7 +284,22 @@ CREATE TABLE IF NOT EXISTS `Mahlzeit-Zutaten` (
 		FOREIGN KEY(`Mahlzeiten-ID`) REFERENCES Mahlzeiten(ID),
 		FOREIGN KEY(`Zutaten-ID`) REFERENCES Zutaten(ID)
 );
- 
+
+REPLACE INTO Bilder (`Alt-Text`, Binaerdaten) VALUES
+	('Curry Wok', 0x0),
+	('Schnitzel', 0x0),
+	('Bratrolle', 0x0),
+	('Krautsalat', 0x0),
+	('Falafel', 0x0),
+	('Currywurst', 0x0),
+	('Käsestulle', 0x0),
+	('Spiegelei', 0x0),
+	('Currywurst Detail', 0x0),
+	('Falafel Detail', 0x0),
+	('Schnitzel Detail', 0x0),
+	('Krautsalat Detail', 0x0),
+	('Currywok Detail', 0x0);
+	
 REPLACE INTO `Deklarationen` (`Zeichen`, `Beschriftung`) VALUES
 	('2', 'Konservierungsstoff'),
 	('3', 'Antioxidationsmittel'),
@@ -328,8 +336,7 @@ REPLACE INTO `Deklarationen` (`Zeichen`, `Beschriftung`) VALUES
 	('K', 'Sesamsamen'),
 	('L', 'Schwefeldioxid oder Sulfite'),
 	('M', 'Lupinen'),
-	('N', 'Weichtiere')
-;
+	('N', 'Weichtiere');
 
 REPLACE INTO `Zutaten` (`ID`, `Name`, `Bio`, `Vegan`, `Vegetarisch`, `Glutenfrei`) VALUES
 	(00080, 'Aal', 0, 0, 0, 1),
@@ -365,9 +372,7 @@ REPLACE INTO `Zutaten` (`ID`, `Name`, `Bio`, `Vegan`, `Vegetarisch`, `Glutenfrei
 	(09020, 'Champignons', 1, 1, 1, 1),
 	(09105, 'Paprika', 1, 1, 1, 1),
 	(09107, 'Fenchel', 1, 1, 1, 1),
-	(09110, 'Sojasprossen', 1, 1, 1, 1)
-;
-
+	(09110, 'Sojasprossen', 1, 1, 1, 1);
 
 -- Im ER-Diagramm fehlt noch das Attribut Adresse, 
 -- das Sie per ALTER TABLE einfach hinzufügen können
@@ -384,52 +389,26 @@ REPLACE INTO `Fachbereiche` (`ID`, `Name`, `Website`, `Adresse`) VALUES
 	(7, 'Wirtschaftswissenschaften', 'https://www.fh-aachen.de/fachbereiche/wirtschaft/', 'Eupener Straße 70, 52066 Aachen'),
 	(8, 'Maschinenbau und Mechatronik', 'https://www.fh-aachen.de/fachbereiche/maschinenbau-und-mechatronik/', 'Goethestraße 1, 52064 Aachen'),
 	(9, 'Medizintechnik und Technomathematik', 'https://www.fh-aachen.de/fachbereiche/medizintechnik-und-technomathematik/', 'Heinrich-Mußmann-Straße 1, 52428 Jülich'),
-	(10, 'Energietechnik', 'https://www.fh-aachen.de/fachbereiche/energietechnik/', 'Heinrich-Mußmann-Straße 1, 52428 Jülich')
-;
-
-INSERT INTO `Benutzer` (`E-Mail`, Nutzername, Salt, `Hash`, Aktiv, Vorname, Nachname)
-	VALUES ('Max@Mustermann.de', 'MaxMu', '12345678901234567890123456789012', '123456789012345678901234', '1', 'Max', 'Mustermann');
-INSERT INTO `Benutzer` (`E-Mail`, Nutzername, Salt, `Hash`, Aktiv, Vorname, Nachname)
-	VALUES ('Maria@Mustermann', 'MarMu', '12345678901234567890123456789012', '123456789012345678901234', '1', 'Maria', 'Mustermann');
-INSERT INTO `Benutzer` (`E-Mail`, Nutzername, Salt, `Hash`, Aktiv, Vorname, Nachname)
-	VALUES ('Peter@Mastermann.de', 'PetMa', '12345678901234567890123456789012', '123456789012345678901234', '1', 'Peter', 'Mastermann');
-INSERT INTO `Benutzer` (`E-Mail`, Nutzername, Salt, `Hash`, Aktiv, Vorname, Nachname)
-	VALUES ('Paul@Dealer', 'PauDe', '12345678901234567890123456789012', '123456789012345678901234', '1', 'Paul', 'Dealer');	
+	(10, 'Energietechnik', 'https://www.fh-aachen.de/fachbereiche/energietechnik/', 'Heinrich-Mußmann-Straße 1, 52428 Jülich');
 	
-INSERT INTO `FH-Angehörige` (ID) 
-	VALUES 
-	(1),
-	(2),
-	(3);
-INSERT INTO `Mitarbeiter` (ID, Telefon, Gebäude, Raumnummer)
-	VALUES (1, 12345678, 'E', 113);
-
-INSERT `Studenten` (ID, Studiengang, Matrikelnummer)
-	VALUES
-	(2,'ET',12345678),
-	(3,'INF',123456789);
+REPLACE INTO Kategorien (`Bezeichnung`, `Oberkategorie`, `Bild`) VALUES
+	('Hauptspeisen', NULL, NULL),
+	('Kleinigkeiten', NULL, NULL),
+	('Smoothies', 2, NULL),
+	('Snacks', 2, NULL),
+	('Burger und Co', 1, NULL),
+	('Asiatisch', 1, NULL),
+	('Klassiker', 1, NULL),
+	('Italienisch', 1, NULL),
+	('Aktionen', NULL, NULL),
+	('Weihnachten', 9, NULL),
+	('Sommergenuss', 9, NULL),
+	('Mensa Vital', 9, NULL),
+	('Sonderangebote', NULL, NULL),
+	('Ersti-Woche', 13, NULL),
+	('Geburtstagsessen', 13, NULL);
 	
-	
-DELETE FROM `Benutzer` WHERE Nummer= (1);
-
-REPLACE INTO Kategorien (`ID`, `Bezeichnung`, `Oberkategorie`, `Bild`) VALUES
-	(1, 'Hauptspeisen', NULL, NULL),
-	(2, 'Kleinigkeiten', NULL, NULL),
-	(3, 'Smoothies', 2, NULL),
-	(4, 'Snacks', 2, NULL),
-	(5, 'Burger und Co', 1, NULL),
-	(6, 'Asiatisch', 1, NULL),
-	(7, 'Klassiker', 1, NULL),
-	(8, 'Italienisch', 1, NULL),
-	(9, 'Aktionen', NULL, NULL),
-	(10, 'Weihnachten', 9, NULL),
-	(11, 'Sommergenuss', 9, NULL),
-	(12, 'Mensa Vital', 9, NULL),
-	(13, 'Sonderangebote', NULL, NULL),
-	(14, 'Ersti-Woche', 13, NULL),
-	(15, 'Geburtstagsessen', 13, NULL);
-	
-INSERT INTO Mahlzeiten (Name, Beschreibung, Vorrat, Verfuegbar, Kategorie, Bild)	VALUES
+REPLACE INTO Mahlzeiten (Name, Beschreibung, Vorrat, Verfuegbar, Kategorie, Bild)	VALUES
 	('Curry Wok','Lecker',5,1,1,1),
 	('Schnitzel','Vom Schwein',5,1,1,1),
 	('Bratrolle','Aus Holland',0,0,1,1),
@@ -439,7 +418,7 @@ INSERT INTO Mahlzeiten (Name, Beschreibung, Vorrat, Verfuegbar, Kategorie, Bild)
 	('Käsestulle','Mit Käse schmeckt alles besser',5,1,1,1),
 	('Spiegelei','Auch lecker',5,1,1,1);
 	
-INSERT INTO Preise (Jahr, Gastpreis, Studentpreis, `MA-Preis`, `Mahlzeiten-ID`) VALUES
+REPLACE INTO Preise (Jahr, Gastpreis, Studentpreis, `MA-Preis`, `Mahlzeiten-ID`) VALUES
 	(2018, 5.95, 5.00, 5.50, 1),
 	(2018, 5.95, 5.00, 5.50, 2),
 	(2018, 5.95, 5.00, 5.50, 3),
@@ -462,4 +441,3 @@ REPLACE INTO `befreundet mit` (`Nummer 1`, `Nummer 2`) VALUES
 	(21, 24),
 	(22, 23),
 	(22, 24);
-
