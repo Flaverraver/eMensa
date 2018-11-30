@@ -1,11 +1,10 @@
-CREATE DATABASE IF NOT EXISTS `E-Mensa`;				
 USE `E-Mensa`;
-
+/* Das hier ist nur für den root gedacht.
 DROP USER IF EXISTS 'webapp'@'localhost';
 CREATE USER 'webapp'@'localhost' IDENTIFIED BY 'heinz';
-GRANT USAGE ON *.* To 'webapp'@'localhost';
-GRANT SELECT, DELETE, INSERT, UPDATE ON *.* TO 'webapp'@'localhost';
-FLUSH PRIVILEGES;
+GRANT USAGE ON `E-Mensa`.* To 'webapp'@'localhost';
+GRANT SELECT, CREATE, ALTER, DROP, DELETE, INSERT, UPDATE ON `E-Mensa`.* TO 'webapp'@'localhost';
+*/
 
 DROP TABLE IF EXISTS `Mahlzeit-Zutaten`;
 DROP TABLE IF EXISTS `Zutaten`;
