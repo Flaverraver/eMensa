@@ -4,7 +4,15 @@
 */
 -- DROP DATABASE `E-Mensa`;
 -- CREATE DATABASE IF NOT EXISTS `E-Mensa`;				
--- USE `E-Mensa`;
+USE `E-Mensa`;
+
+DROP USER IF EXISTS 'webapp'@'localhost';
+CREATE USER 'webapp'@'localhost' IDENTIFIED BY 'heinz';
+GRANT USAGE ON *.* To 'webapp'@'localhost';
+GRANT SELECT, DELETE, INSERT, UPDATE ON *.* TO 'webapp'@'localhost';
+FLUSH PRIVILEGES;
+
+
 
 DROP TABLE IF EXISTS `Mahlzeit-Zutaten`;
 DROP TABLE IF EXISTS `Zutaten`;
@@ -57,7 +65,9 @@ CREATE TABLE IF NOT EXISTS `befreundet mit` (
 																					-- Many-Many Relation zur selben Entität in Ordnung so?
 	CONSTRAINT `Benutzer befreundet mit` 
 		FOREIGN KEY(`Nummer 1`) REFERENCES Benutzer(Nummer),
-		FOREIGN KEY(`Nummer 2`) REFERENCES Benutzer(Nummer) 	
+		FOREIGN KEY(`Nummer 2`) REFERENCES Benutzer(Nummer),
+	CONSTRAINT `Selber Freund`
+		CHECK (`Nummer 1` != `Nummer 2`) 	
 );
 
 -- Gäste bekommen im Zuge der "is-a-relation" ein weiteres Attribut ID, welches die Nummer/ID
@@ -117,12 +127,48 @@ CREATE TABLE IF NOT EXISTS `FH_zu_FB` (
 		FOREIGN KEY(`FB-ID`) REFERENCES Fachbereiche(ID)
 );
 
+CREATE TABLE IF NOT EXISTS `Bilder` (
+	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	`Alt-Text` VARCHAR(255) NOT NULL,
+	`Titel` VARCHAR(50),
+	`Binaerdaten` LONGBLOB NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS `Kategorien` (
+	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	`Bezeichnung` VARCHAR(255) NOT NULL DEFAULT "Test",
+	`Oberkategorie` INT UNSIGNED DEFAULT NULL,
+	`Bild` INT UNSIGNED,
+	
+	FOREIGN KEY (Bild) REFERENCES Bilder(ID) ON DELETE SET NULL,
+	FOREIGN KEY (Oberkategorie) REFERENCES Kategorien(ID) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS `Mahlzeiten` (
+	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	`Name` VARCHAR(40) NOT NULL,
+	`Beschreibung` TEXT NOT NULL,
+	`Vorrat` INT UNSIGNED NOT NULL DEFAULT 0,
+	`Verfuegbar` BOOL,							-- Muss berechnet werden
+	`Kategorie` INT UNSIGNED NOT NULL,
+	`Bild` INT UNSIGNED NOT NULL,
+	
+	FOREIGN KEY (Kategorie) REFERENCES Kategorien(ID),
+	FOREIGN KEY (Bild) REFERENCES Bilder(ID)
+	
+);
+
 CREATE TABLE IF NOT EXISTS `Kommentare` (
 	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	`Bemerkung` TEXT NULL,
 	`Bewertung` TINYINT(1) NOT NULL,
+	`Studenten-ID` INT UNSIGNED NOT NULL,
+	`Mahlzeit-ID` INT UNSIGNED NOT NULL,
 	
-	CONSTRAINT `Bewertung 1-5` CHECK (`Bewertung` <= 5)
+	FOREIGN KEY (`Studenten-ID`) REFERENCES `Studenten`(`ID`)
+	-- FOREIGN KEY `Mahlzeit-ID` REFERENCES Mahlzeiten(ID)
+		
+	-- CONSTRAINT `Bewertung 1-5` CHECK (`Bewertung` <= 5)
 );
 
 -- 1-zu-N
@@ -148,14 +194,16 @@ CREATE TABLE IF NOT EXISTS `Bestellungen` (
 	`Bestell-Zeitpunkt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	`Abhol-Zeitpunkt` TIMESTAMP NULL,
 	`Endpreis` DECIMAL(6,2) NOT NULL,				-- Manipulation der Daten fehlt
+	`Benutzer-ID` INT UNSIGNED,
 	
-	CONSTRAINT `Abholzeitpunkt` CHECK (UNIX_TIMESTAMP(`Abhol-Zeitpunkt`) > UNIX_TIMESTAMP(`Bestell-Zeitpunkt`))
+	CONSTRAINT `Abholzeitpunkt` CHECK (UNIX_TIMESTAMP(`Abhol-Zeitpunkt`) > UNIX_TIMESTAMP(`Bestell-Zeitpunkt`)),
+	FOREIGN KEY (`Benutzer-ID`) REFERENCES Benutzer(Nummer)
 );
 
 -- 1-zu-N
 CREATE TABLE IF NOT EXISTS `Tätigt` (
 	`Bestellnummer` INT UNSIGNED PRIMARY KEY,
-	`Benutzer-ID` INT UNSIGNED,
+	`Benutzer-ID` INT UNSIGNED NOT NULL,
 	
 	CONSTRAINT `Bestellung` 
 		FOREIGN KEY(`Bestellnummer`) REFERENCES Bestellungen(Nummer),
@@ -165,36 +213,6 @@ CREATE TABLE IF NOT EXISTS `Tätigt` (
 CREATE TABLE IF NOT EXISTS `Oberkategorien` (
 	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	`Bezeichnung` VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS `Bilder` (
-	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	`Alt-Text` VARCHAR(255) NOT NULL,
-	`Titel` VARCHAR(50),
-	`Binaerdaten` LONGBLOB NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS `Kategorien` (
-	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	`Bezeichnung` VARCHAR(255) NOT NULL,
-	`Oberkategorie` INT UNSIGNED,
-	`Bild` INT UNSIGNED,
-	
-	FOREIGN KEY (Bild) REFERENCES Bilder(ID) ON DELETE SET NULL,
-	FOREIGN KEY (Oberkategorie) REFERENCES Oberkategorien(ID) ON DELETE SET NULL
-);
-
-CREATE TABLE IF NOT EXISTS `Mahlzeiten` (
-	`ID` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-	`Name` VARCHAR(40) NOT NULL,
-	`Beschreibung` TEXT NOT NULL,
-	`Vorrat` INT UNSIGNED NOT NULL DEFAULT 0,
-	`Verfuegbar` BOOL,							-- Muss berechnet werden
-	`Kategorie` INT UNSIGNED,
-	`Bild` INT UNSIGNED,
-	
-	FOREIGN KEY (Kategorie) REFERENCES Kategorien(ID),
-	FOREIGN KEY (Bild) REFERENCES Bilder(ID)
 );
 
 -- N-zu-M
@@ -394,15 +412,32 @@ INSERT `Studenten` (ID, Studiengang, Matrikelnummer)
 	
 DELETE FROM `Benutzer` WHERE Nummer= (1);
 
-INSERT INTO Mahlzeiten (Name, Beschreibung, Vorrat, Verfuegbar)	VALUES
-	('Curry Wok','Lecker',5,1),
-	('Schnitzel','Vom Schwein',5,1),
-	('Bratrolle','Aus Holland',0,0),
-	('Krautsalat','Beliebtes Gericht in Deutschland',5,1),
-	('Falafel','Gibt es auch',5,1),
-	('Currywurst','mit Pommes',5,1),
-	('Käsestulle','Mit Käse schmeckt alles besser',5,1),
-	('Spiegelei','Auch lecker',5,1);
+REPLACE INTO Kategorien (`ID`, `Bezeichnung`, `Oberkategorie`, `Bild`) VALUES
+	(1, 'Hauptspeisen', NULL, NULL),
+	(2, 'Kleinigkeiten', NULL, NULL),
+	(3, 'Smoothies', 2, NULL),
+	(4, 'Snacks', 2, NULL),
+	(5, 'Burger und Co', 1, NULL),
+	(6, 'Asiatisch', 1, NULL),
+	(7, 'Klassiker', 1, NULL),
+	(8, 'Italienisch', 1, NULL),
+	(9, 'Aktionen', NULL, NULL),
+	(10, 'Weihnachten', 9, NULL),
+	(11, 'Sommergenuss', 9, NULL),
+	(12, 'Mensa Vital', 9, NULL),
+	(13, 'Sonderangebote', NULL, NULL),
+	(14, 'Ersti-Woche', 13, NULL),
+	(15, 'Geburtstagsessen', 13, NULL);
+	
+INSERT INTO Mahlzeiten (Name, Beschreibung, Vorrat, Verfuegbar, Kategorie, Bild)	VALUES
+	('Curry Wok','Lecker',5,1,1,1),
+	('Schnitzel','Vom Schwein',5,1,1,1),
+	('Bratrolle','Aus Holland',0,0,1,1),
+	('Krautsalat','Beliebtes Gericht in Deutschland',5,1,1,1),
+	('Falafel','Gibt es auch',5,1,1,1),
+	('Currywurst','mit Pommes',5,1,1,1),
+	('Käsestulle','Mit Käse schmeckt alles besser',5,1,1,1),
+	('Spiegelei','Auch lecker',5,1,1,1);
 	
 INSERT INTO Preise (Jahr, Gastpreis, Studentpreis, `MA-Preis`, `Mahlzeiten-ID`) VALUES
 	(2018, 5.95, 5.00, 5.50, 1),
@@ -414,14 +449,17 @@ INSERT INTO Preise (Jahr, Gastpreis, Studentpreis, `MA-Preis`, `Mahlzeiten-ID`) 
 	(2018, 5.95, 5.00, 5.50, 7),
 	(2018, 5.95, 5.00, 5.50, 8);
 								
-	
-INSERT INTO Kategorien (Bezeichnung) VALUES
-	('Klassiker'),
-	('Vegetarisch'),
-	('Tellergericht');
+REPLACE INTO Benutzer (`Nummer`, `Vorname`, `Nachname`, `E-Mail`, `Nutzername`, `Letzter Login`, `Anlegedatum`, `Geburtsdatum`, `Alter`, `Salt`, `Hash`, `Aktiv`) VALUES 
+	(21, 'Bugs', 'Findmore', 'dbwt2018@ismypassword.com', 'bugfin', '2018-11-14 17:44:10', '2018-11-14', '1996-12-13', 0, 'MPVdLDf0zNVzpOHP+GmRxoBg9mdJIlc5', '4nx5U6DIE+N8xsbpwUr3Q1KG', 1),
+	(22, 'Donald', 'Truck', 'testing@ismypassword.com', 'dot', '2018-11-14 17:44:10', '2018-11-14', '1991-12-11', 0, 'Ydn1iGl08JvvkVExSEiKDQhfYOaCtgOO', 'm5kZ68YVNU3xBiDqorthK9UP', 1),
+	(23, 'Fiona', 'Index', 'an0ther@ismypassword.com', 'fionad', '2018-11-14 17:44:10', '2018-11-14', '1993-12-10', 0, 'I5GXy7BwYU2t3pHZ5YkBfKMbvN7Sr81O', 'oYylNvPe7YmjO1IHNdLA/XxJ', 1),
+	(24, 'Wendy', 'Burger', 's3cr3tz@ismypassword.com', 'bkahuna', '2018-11-14 17:44:10', '2018-11-14', '1982-12-12', 0, 't1TAVguVwIiejXf3baaObIAtPx7Y+2iY', 'IMK2n5r8RUVFo4bMMS8uDyH4', 1),
+	(25, 'Monster', 'Robot', '^;_`;^@ismypassword.com', 'root', '2018-11-14 17:44:10', '2018-11-14', '1982-12-12', 0, 'dX8YsBM9atpYto9caWHJM6Eet7bUngxk', 'nRt3MSBdNUHPj/q02WPgXaDA', 1);
 
-CREATE USER IF NOT EXISTS 'webapp'@'localhost' IDENTIFIED BY 'heinz';
-GRANT SELECT, PROCESS, EXECUTE, SHOW DATABASES, SHOW VIEW, UPDATE, TRIGGER, REFERENCES, INSERT, INDEX, EVENT, DROP, DELETE, CREATE VIEW, CREATE TEMPORARY TABLES, CREATE TABLESPACE, CREATE ROUTINE, CREATE, ALTER ROUTINE, ALTER  ON *.* TO 'webapp'@'localhost';
-FLUSH PRIVILEGES;
+REPLACE INTO `befreundet mit` (`Nummer 1`, `Nummer 2`) VALUES 
+	(21, 22),
+	(21, 23),
+	(21, 24),
+	(22, 23),
+	(22, 24);
 
-SELECT `ID`, Name, `Beschreibung`, `Gastpreis`, `Binaerdaten` FROM `Mahlzeiten` LEFT JOIN (`Preise`,`Bilder`) ON Mahlzeiten.ID = Preise.`Mahlzeiten-ID` WHERE Mahlzeiten.ID=1;
