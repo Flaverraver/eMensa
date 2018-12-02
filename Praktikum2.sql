@@ -9,22 +9,19 @@ GRANT SELECT, CREATE, ALTER, DROP, DELETE, INSERT, UPDATE ON `E-Mensa`.* TO 'web
 DROP TABLE IF EXISTS `Mahlzeit-Zutaten`;
 DROP TABLE IF EXISTS `Zutaten`;
 DROP TABLE IF EXISTS `Mahlzeit-Bild`;
-DROP TABLE IF EXISTS `Kategorien-Bilder`;
-DROP TABLE IF EXISTS `Mahlzeiten-Kategorie`;
-DROP TABLE IF EXISTS `Unterkategorien`;
 DROP TABLE IF EXISTS `Preise`;
 DROP TABLE IF EXISTS `Mahlzeit-Deklaration`;
 DROP TABLE IF EXISTS `Mahlzeiten-Kommentar`;
 DROP TABLE IF EXISTS `Bestellanzahl`;
-DROP TABLE IF EXISTS `Mahlzeiten`;
-DROP TABLE IF EXISTS `Kategorien`;
-DROP TABLE IF EXISTS `Bilder`;
 DROP TABLE IF EXISTS `Oberkategorien`;
 DROP TABLE IF EXISTS `tätigt`;
 DROP TABLE IF EXISTS `Bestellungen`;
 DROP TABLE IF EXISTS `Deklarationen`;
 DROP TABLE IF EXISTS `schreibt`;
 DROP TABLE IF EXISTS `Kommentare`;
+DROP TABLE IF EXISTS `Mahlzeiten`;
+DROP TABLE IF EXISTS `Kategorien`;
+DROP TABLE IF EXISTS `Bilder`;
 DROP TABLE IF EXISTS `FH_zu_FB`;
 DROP TABLE IF EXISTS `Fachbereiche`;
 DROP TABLE IF EXISTS `Studenten`;
@@ -34,27 +31,32 @@ DROP TABLE IF EXISTS `Gäste`;
 DROP TABLE IF EXISTS `befreundet mit`;
 DROP TABLE IF EXISTS `Benutzer`;
 
+/*
+DROP TABLE IF EXISTS `Kategorien-Bilder`;
+DROP TABLE IF EXISTS `Mahlzeiten-Kategorie`;
+DROP TABLE IF EXISTS `Unterkategorien`;
+*/
+
 CREATE TABLE IF NOT EXISTS `Benutzer`(
 	`Nummer` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	`E-Mail` VARCHAR(255) NOT NULL UNIQUE,
-	`Letzter Login` TIMESTAMP NULL DEFAULT NULL,				-- Warum NULL (ist doch Standard eig?)
+	`Letzter Login` TIMESTAMP NULL DEFAULT NULL,				
 	`Nutzername` VARCHAR(20) NOT NULL UNIQUE,
 	`Salt` CHAR(32) NOT NULL,							
 	`Hash` CHAR(24) NOT NULL,							
 	`Anlegedatum` DATE DEFAULT CURRENT_DATE,
-	`Aktiv` BOOL NOT NULL,								-- Flag: Alternativ Bit?  |||| Hier noch Default-Wert setzen?
+	`Aktiv` BOOL NOT NULL DEFAULT 1,							
 	`Vorname` VARCHAR(50) NOT NULL,
 	`Nachname` VARCHAR(50) NOT NULL,
 	`Geburtsdatum`	DATE,
-	`Alter` TINYINT(3) UNSIGNED						-- Später in der Manipulation der Daten	
+	`Alter` TINYINT(3) UNSIGNED					
 );
 
 -- N-zu-M
-
 CREATE TABLE IF NOT EXISTS `befreundet mit` (
 	`Nummer 1` INT UNSIGNED,
 	`Nummer 2` INT UNSIGNED,
-																					-- Many-Many Relation zur selben Entität in Ordnung so?
+																					
 	CONSTRAINT `Benutzer befreundet mit` 
 		FOREIGN KEY(`Nummer 1`) REFERENCES Benutzer(Nummer),
 		FOREIGN KEY(`Nummer 2`) REFERENCES Benutzer(Nummer),
@@ -62,22 +64,20 @@ CREATE TABLE IF NOT EXISTS `befreundet mit` (
 		CHECK (`Nummer 1` != `Nummer 2`) 	
 );
 
--- Gäste bekommen im Zuge der "is-a-relation" ein weiteres Attribut ID, welches die Nummer/ID
--- des Benutzers referenziert, beziehungsweise auch den selben Wert hat. (?)
+-- Gäste is-a Benutzer
 CREATE TABLE IF NOT EXISTS `Gäste` (
 	`ID` INT UNSIGNED PRIMARY KEY,
 	`Ablaufdatum` DATE DEFAULT ADDDATE(CURRENT_DATE,7),
 	`Grund` VARCHAR(255) NOT NULL,
 	
-	CONSTRAINT `FK_Gast_Benutzer` FOREIGN KEY(`ID`) REFERENCES Benutzer(Nummer) ON DELETE CASCADE				-- Is-a Beziehung? So in Ordnung?
+	CONSTRAINT `FK_Gast_Benutzer` FOREIGN KEY(`ID`) REFERENCES Benutzer(Nummer) ON DELETE CASCADE			
 ); 
 
--- FH-Angehörige bekommen im Zuge der "is-a-relation" ein weiteres Attribut ID, welches die Nummer/ID
--- des Benutzers referenziert, beziehungsweise auch den selben Wert hat. (?)
+-- FH-Angehörige is-a Benutzer
 CREATE TABLE IF NOT EXISTS `FH-Angehörige` (
 	`ID` INT UNSIGNED PRIMARY KEY,
 	
-	CONSTRAINT `FK_FH_Benutzer` FOREIGN KEY(`ID`) REFERENCES Benutzer(Nummer)  ON DELETE CASCADE				-- Is-a Beziehung? So in Ordnung?
+	CONSTRAINT `FK_FH_Benutzer` FOREIGN KEY(`ID`) REFERENCES Benutzer(Nummer)  ON DELETE CASCADE		
 );
 
 -- Attribut `Büro` wird aufgeteilt in Gebäude-Buchstabe und Raumnummer.
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS `Mitarbeiter` (
 	`Gebäude` ENUM('C','D','E','F','G','H','W'),						
 	`Raumnummer` SMALLINT(3),
 	
-	CONSTRAINT `FK_MA_FH` FOREIGN KEY(`ID`) REFERENCES `FH-Angehörige`(ID)  ON DELETE CASCADE			-- Auch eine Is-a Beziehung?
+	CONSTRAINT `FK_MA_FH` FOREIGN KEY(`ID`) REFERENCES `FH-Angehörige`(ID)  ON DELETE CASCADE		
 );
 
 -- Weiteres Attribut ID, welches die ID vom FH-Angehörigen referenziert.
@@ -141,13 +141,14 @@ CREATE TABLE IF NOT EXISTS `Mahlzeiten` (
 	`Name` VARCHAR(40) NOT NULL,
 	`Beschreibung` TEXT NOT NULL,
 	`Vorrat` INT UNSIGNED NOT NULL DEFAULT 0,
-	`Verfuegbar` BOOL,							-- Muss berechnet werden
+	`Verfuegbar` BOOL,							
 	`Kategorie` INT UNSIGNED NOT NULL,
 	`Bild` INT UNSIGNED NOT NULL,
+	`Detail` INT UNSIGNED NOT NULL,
 	
 	FOREIGN KEY (Kategorie) REFERENCES Kategorien(ID),
-	FOREIGN KEY (Bild) REFERENCES Bilder(ID)
-	
+	FOREIGN KEY (Bild) REFERENCES Bilder(ID),
+	FOREIGN KEY (Detail) REFERENCES Bilder(ID)	
 );
 
 CREATE TABLE IF NOT EXISTS `Kommentare` (
@@ -157,10 +158,10 @@ CREATE TABLE IF NOT EXISTS `Kommentare` (
 	`Studenten-ID` INT UNSIGNED NOT NULL,
 	`Mahlzeit-ID` INT UNSIGNED NOT NULL,
 	
-	FOREIGN KEY (`Studenten-ID`) REFERENCES `Studenten`(`ID`)
-	-- FOREIGN KEY `Mahlzeit-ID` REFERENCES Mahlzeiten(ID)
+	FOREIGN KEY (`Studenten-ID`) REFERENCES `Studenten`(`ID`),
+	FOREIGN KEY (`Mahlzeit-ID`) REFERENCES Mahlzeiten(ID),
 		
-	-- CONSTRAINT `Bewertung 1-5` CHECK (`Bewertung` <= 5)
+	CONSTRAINT `Bewertung 1-5` CHECK (`Bewertung` <= 5)
 );
 
 -- 1-zu-N
@@ -297,7 +298,10 @@ REPLACE INTO Bilder (`Alt-Text`, Binaerdaten) VALUES
 	('Falafel Detail', 0x0),
 	('Schnitzel Detail', 0x0),
 	('Krautsalat Detail', 0x0),
-	('Currywok Detail', 0x0);
+	('Currywok Detail', 0x0),
+	('Käsestulle Detail', 0x0),
+	('Bratrolle Detail', 0x0),
+	('Spiegelei Detail', 0x0);
 	
 REPLACE INTO `Deklarationen` (`Zeichen`, `Beschriftung`) VALUES
 	('2', 'Konservierungsstoff'),
@@ -338,40 +342,40 @@ REPLACE INTO `Deklarationen` (`Zeichen`, `Beschriftung`) VALUES
 	('N', 'Weichtiere');
 
 REPLACE INTO `Zutaten` (`ID`, `Name`, `Bio`, `Vegan`, `Vegetarisch`, `Glutenfrei`) VALUES
-	(00080, 'Aal', 0, 0, 0, 1),
-	(00081, 'Forelle', 0, 0, 0, 1),
-	(00082, 'Barsch', 0, 0, 0, 1),
-	(00083, 'Lachs', 0, 0, 0, 1),
-	(00084, 'Lachs', 1, 0, 0, 1),
-	(00085, 'Heilbutt', 0, 0, 0, 1),
-	(00086, 'Heilbutt', 1, 0, 0, 1),
-	(00100, 'Kurkumin', 1, 1, 1, 1),
-	(00101, 'Riboflavin', 0, 1, 1, 1),
-	(00123, 'Amaranth', 1, 1, 1, 1),
-	(00150, 'Zuckerkulör', 0, 1, 1, 1),
-	(00171, 'Titandioxid', 0, 1, 1, 1),
-	(00220, 'Schwefeldioxid', 0, 1, 1, 1),
-	(00270, 'Milchsäure', 0, 1, 1, 1),
-	(00322, 'Lecithin', 0, 1, 1, 1),
-	(00330, 'Zitronensäure', 1, 1, 1, 1),
-	(00999, 'Weizenmehl', 1, 1, 1, 0),
-	(01000, 'Weizenmehl', 0, 1, 1, 0),
-	(01001, 'Hanfmehl', 1, 1, 1, 1),
-	(01010, 'Zucker', 0, 1, 1, 1),
-	(01013, 'Traubenzucker', 0, 1, 1, 1),
-	(01015, 'Branntweinessig', 0, 1, 1, 1),
-	(02019, 'Karotten', 0, 1, 1, 1),
-	(02020, 'Champignons', 0, 1, 1, 1),
-	(02101, 'Schweinefleisch', 0, 0, 0, 1),
-	(02102, 'Speck', 0, 0, 0, 1),
-	(02103, 'Alginat', 0, 1, 1, 1),
-	(02105, 'Paprika', 0, 1, 1, 1),
-	(02107, 'Fenchel', 0, 1, 1, 1),
-	(02108, 'Sellerie', 0, 1, 1, 1),
-	(09020, 'Champignons', 1, 1, 1, 1),
-	(09105, 'Paprika', 1, 1, 1, 1),
-	(09107, 'Fenchel', 1, 1, 1, 1),
-	(09110, 'Sojasprossen', 1, 1, 1, 1);
+	(80, 'Aal', 0, 0, 0, 1),
+	(81, 'Forelle', 0, 0, 0, 1),
+	(82, 'Barsch', 0, 0, 0, 1),
+	(83, 'Lachs', 0, 0, 0, 1),
+	(84, 'Lachs', 1, 0, 0, 1),
+	(85, 'Heilbutt', 0, 0, 0, 1),
+	(86, 'Heilbutt', 1, 0, 0, 1),
+	(100, 'Kurkumin', 1, 1, 1, 1),
+	(101, 'Riboflavin', 0, 1, 1, 1),
+	(123, 'Amaranth', 1, 1, 1, 1),
+	(150, 'Zuckerkulör', 0, 1, 1, 1),
+	(171, 'Titandioxid', 0, 1, 1, 1),
+	(220, 'Schwefeldioxid', 0, 1, 1, 1),
+	(270, 'Milchsäure', 0, 1, 1, 1),
+	(322, 'Lecithin', 0, 1, 1, 1),
+	(330, 'Zitronensäure', 1, 1, 1, 1),
+	(999, 'Weizenmehl', 1, 1, 1, 0),
+	(1000, 'Weizenmehl', 0, 1, 1, 0),
+	(1001, 'Hanfmehl', 1, 1, 1, 1),
+	(1010, 'Zucker', 0, 1, 1, 1),
+	(1013, 'Traubenzucker', 0, 1, 1, 1),
+	(1015, 'Branntweinessig', 0, 1, 1, 1),
+	(2019, 'Karotten', 0, 1, 1, 1),
+	(2020, 'Champignons', 0, 1, 1, 1),
+	(2101, 'Schweinefleisch', 0, 0, 0, 1),
+	(2102, 'Speck', 0, 0, 0, 1),
+	(2103, 'Alginat', 0, 1, 1, 1),
+	(2105, 'Paprika', 0, 1, 1, 1),
+	(2107, 'Fenchel', 0, 1, 1, 1),
+	(2108, 'Sellerie', 0, 1, 1, 1),
+	(9020, 'Champignons', 1, 1, 1, 1),
+	(9105, 'Paprika', 1, 1, 1, 1),
+	(9107, 'Fenchel', 1, 1, 1, 1),
+	(9110, 'Sojasprossen', 1, 1, 1, 1);
 
 -- Im ER-Diagramm fehlt noch das Attribut Adresse, 
 -- das Sie per ALTER TABLE einfach hinzufügen können
@@ -407,15 +411,15 @@ REPLACE INTO Kategorien (`Bezeichnung`, `Oberkategorie`, `Bild`) VALUES
 	('Ersti-Woche', 13, NULL),
 	('Geburtstagsessen', 13, NULL);
 	
-REPLACE INTO Mahlzeiten (Name, Beschreibung, Vorrat, Verfuegbar, Kategorie, Bild)	VALUES
-	('Curry Wok','Lecker',5,1,1,1),
-	('Schnitzel','Vom Schwein',5,1,1,1),
-	('Bratrolle','Aus Holland',0,0,1,1),
-	('Krautsalat','Beliebtes Gericht in Deutschland',5,1,1,1),
-	('Falafel','Gibt es auch',5,1,1,1),
-	('Currywurst','mit Pommes',5,1,1,1),
-	('Käsestulle','Mit Käse schmeckt alles besser',5,1,1,1),
-	('Spiegelei','Auch lecker',5,1,1,1);
+REPLACE INTO Mahlzeiten (Name, Beschreibung, Vorrat, Verfuegbar, Kategorie, Bild, Detail)	VALUES
+	('Curry Wok','Lecker',5,1,1,1,13),
+	('Schnitzel','Vom Schwein',5,1,1,2,11),
+	('Bratrolle','Aus Holland',0,0,1,3,14),
+	('Krautsalat','Beliebtes Gericht in Deutschland',5,1,1,4,12),
+	('Falafel','Gibt es auch',5,1,1,5,10),
+	('Currywurst','mit Pommes',5,1,1,6,9),
+	('Käsestulle','Mit Käse schmeckt alles besser',5,1,1,7,15),
+	('Spiegelei','Auch lecker',5,1,1,8,16);
 	
 REPLACE INTO Preise (Jahr, Gastpreis, Studentpreis, `MA-Preis`, `Mahlzeiten-ID`) VALUES
 	(2018, 5.95, 5.00, 5.50, 1),

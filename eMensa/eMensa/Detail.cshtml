@@ -1,8 +1,8 @@
 ﻿@using System.Configuration
 @using MySql.Data.MySqlClient;
 @{
-    Page.Title = "eMensa - Details";
-    Page.Description = "eMensa Details";
+    Page.Title = "eMensa - Start";
+    Page.Description = "eMensa Startseite";
     Layout = "~/_Layout.cshtml";
 }
 
@@ -70,6 +70,7 @@
         public string Name { get; set; }
         public string Beschreibung { get; set; }
         public string Gastpreis { get; set; }
+        public byte[] Binaerdaten { get; set; }
     }
 }
 
@@ -83,18 +84,20 @@
         con.Open();
         MySqlCommand cmd;
         cmd = con.CreateCommand();
-        cmd.CommandText = "SELECT `ID`, Name, `Beschreibung`, `Gastpreis`, `Binaerdaten` FROM `Mahlzeiten` LEFT JOIN `Preise` LEFT JOIN `Bilder` ON Mahlzeiten.ID = Preise.`Mahlzeiten-ID` WHERE Mahlzeiten.ID='" + qstring + "'";
+        cmd.CommandText = "SELECT Mahlzeiten.ID, Name, `Beschreibung`, `Gastpreis`, `Binaerdaten` FROM (Mahlzeiten, Preise, Bilder) WHERE Mahlzeiten.ID = Preise.`Mahlzeiten-ID` AND Mahlzeiten.Detail = Bilder.ID";
+
 
 
         MySqlDataReader reader = cmd.ExecuteReader();
 
 
-        while (reader.Read())
+        while (reader.Read() && G.ID != Int32.Parse(qstring))
         {
             G.ID = Convert.ToInt32(reader["ID"]);
             G.Name = reader["Name"].ToString();
             G.Beschreibung = reader["Beschreibung"].ToString();
             G.Gastpreis = reader["Gastpreis"].ToString();
+            G.Binaerdaten = (byte[])reader["Binaerdaten"];
 
         }
         reader.Close();
@@ -109,8 +112,7 @@
 }
 
 @if (G.ID == 0 || qstring == null || GotException)
-{
-    @*Hier kommt noch eine Fehlermeldung hin*@
+{ 
     <p>Etwas ist schief gelaufen. Sie werden in Kürze zurück zur Startseite geleitet.</p>
     <meta http-equiv="refresh" content="3; url=Start.cshtml">
 }
@@ -140,7 +142,11 @@ else
         </div>
         <div class="col-6">
             <img title="Photo by Brooke Lark on Unsplash"
-                 src="img/spiegelei2.png"
+                 @{
+                    String Base64Prefix = "data:image/jpg;base64,";
+                    String image = Base64Prefix + System.Convert.ToBase64String(G.Binaerdaten);
+                 }
+                 src="@image"
                  width="500"
                  height="200"
                  class="splash"
