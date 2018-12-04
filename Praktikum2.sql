@@ -6,6 +6,8 @@ GRANT USAGE ON `E-Mensa`.* To 'webapp'@'localhost';
 GRANT SELECT, CREATE, ALTER, DROP, DELETE, INSERT, UPDATE ON `E-Mensa`.* TO 'webapp'@'localhost';
 */
 
+-- Test
+
 DROP TABLE IF EXISTS `Mahlzeit-Zutaten`;
 DROP TABLE IF EXISTS `Zutaten`;
 DROP TABLE IF EXISTS `Mahlzeit-Bild`;
